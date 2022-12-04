@@ -6,11 +6,17 @@ require (
 	github.com/bxcodec/faker/v4 v4.0.0-beta.3
 	github.com/gin-gonic/gin v1.8.1
 	github.com/go-redis/redis/v9 v9.0.0-rc.2
+	github.com/golang-jwt/jwt v3.2.2+incompatible
+	github.com/google/uuid v1.3.0
 	github.com/jmoiron/sqlx v1.3.5
 	github.com/joho/godotenv v1.4.0
 	github.com/lib/pq v1.10.7
 	github.com/spf13/viper v1.14.0
 	github.com/stretchr/testify v1.8.1
+	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a
+	github.com/swaggo/gin-swagger v1.5.3
+	github.com/swaggo/swag v1.8.1
+	golang.org/x/crypto v0.3.0
 )
 
 require (
@@ -30,8 +36,6 @@ require (
 	github.com/go-playground/universal-translator v0.18.0 // indirect
 	github.com/go-playground/validator/v10 v10.10.0 // indirect
 	github.com/goccy/go-json v0.9.7 // indirect
-	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
-	github.com/google/uuid v1.3.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
@@ -50,11 +54,7 @@ require (
 	github.com/spf13/jwalterweatherman v1.1.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/subosito/gotenv v1.4.1 // indirect
-	github.com/swaggo/files v0.0.0-20220728132757-551d4a08d97a // indirect
-	github.com/swaggo/gin-swagger v1.5.3 // indirect
-	github.com/swaggo/swag v1.8.1 // indirect
 	github.com/ugorji/go/codec v1.2.7 // indirect
-	golang.org/x/crypto v0.3.0 // indirect
 	golang.org/x/net v0.2.0 // indirect
 	golang.org/x/sys v0.2.0 // indirect
 	golang.org/x/text v0.4.0 // indirect
