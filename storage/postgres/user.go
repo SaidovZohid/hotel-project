@@ -136,6 +136,42 @@ func (ud *userRepo) Get(user_id int64) (*repo.User, error) {
 	return &u, nil
 }
 
+func (ud *userRepo) GetByEmail(email string) (*repo.User, error) {
+	var u repo.User
+	query := `
+		SELECT 
+			id,
+			first_name,
+			last_name,
+			email,
+			password,
+			phone_number,
+			type,
+			created_at,
+			updated_at
+		FROM users WHERE email = $1
+	`
+	err := ud.db.QueryRow(
+		query,
+		email,
+	).Scan(
+		&u.ID,
+		&u.FirstName,
+		&u.LastName,
+		&u.Email,
+		&u.Password,
+		&u.PhoneNumber,
+		&u.Type,
+		&u.CreatedAt,
+		&u.UpdatedAt,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	return &u, nil
+}
+
 // This function for deleting user. It takes user id and returns nil, if there is error it will error
 func (ud *userRepo) Delete(user_id int64) error {
 	query := `
@@ -210,5 +246,23 @@ func (ud *userRepo) GetAll(params *repo.GetAllUsersParams) (*repo.GetAllUsers, e
 		}
 		res.Users = append(res.Users, &u)
 	}
+	queryCount := "SELECT count(1) FROM users " + filter
+	err = ud.db.QueryRow(queryCount).Scan(&res.Count)
+	if err != nil {
+		return nil, err
+	} 
+	
 	return &res, nil
+}
+
+func (ud *userRepo) ChangeTypeUser(user_type string, user_id int64) error {
+	query := `
+		UPDATE users SET type = $1 WHERE id = $2
+	`
+	_, err := ud.db.Exec(query, user_type, user_id)
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

@@ -13,7 +13,7 @@ create table "users" (
 
 create table "hotels" (
     "id" serial primary key,
-    "user_id" int not null references users(id) unique,
+    "manager_id" int not null references users(id) unique,
     "hotel_name" varchar(100) not null,
     "description" text not null,
     "address" varchar(100) not null,
@@ -30,6 +30,7 @@ create table "hotel_images" (
 
 create table "rooms" (
     "id" serial primary key,
+    "room_number" int not null,
     "hotel_id" int not null references hotels(id),
     "type" varchar(20) check ("type" in ('single', 'double', 'family')),
     "description" text not null,
@@ -39,8 +40,8 @@ create table "rooms" (
 
 create table "bookings" (
     "id" serial primary key,
-    "arrival_at" date not null,
-    "checkout_at" date not null,
+    "check_in" date not null,
+    "check_out" date not null,
     "hotel_id" int not null references hotels(id),
     "room_id" int not null references rooms(id),
     "user_id" int not null references users(id),

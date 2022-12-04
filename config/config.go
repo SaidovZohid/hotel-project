@@ -10,6 +10,7 @@ type Config struct {
 	RedisAddr string
 	Auth      Authorization
 	Postgres  PostgresConfig
+	Smtp      Smtp
 }
 
 type PostgresConfig struct {
@@ -23,6 +24,12 @@ type PostgresConfig struct {
 type Authorization struct {
 	AuthHeaderKey  string
 	AuthpayloadKey string
+	SecretKey      string
+}
+
+type Smtp struct {
+	Sender   string
+	Password string
 }
 
 func Load(path string) Config {
@@ -40,8 +47,13 @@ func Load(path string) Config {
 			Database: conf.GetString("POSTGRES_DATABASE"),
 		},
 		Auth: Authorization{
-			AuthHeaderKey:  conf.GetString("AUTH_HEADER_KEY"),
-			AuthpayloadKey: conf.GetString("AUTH_PAYLOAD_KEY"),
+			AuthHeaderKey:  conf.GetString("AUTHORIZATION_HEADER_KEY"),
+			AuthpayloadKey: conf.GetString("AUTHORIZATION_PAYLOAD_KEY"),
+			SecretKey:      conf.GetString("SECRET_KEY"),
+		},
+		Smtp: Smtp{
+			Sender:   conf.GetString("SMTP_SENDER"),
+			Password: conf.GetString("SMTP_PASSWORD"),
 		},
 	}
 

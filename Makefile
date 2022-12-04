@@ -9,6 +9,9 @@ run:
 print:
 	echo $(DB_URL)
 
+swag-init:
+	swag init -g api/server.go -o api/docs
+
 migrate-up:
 	migrate -path migrations -database "$(DB_URL)" -verbose up
 
