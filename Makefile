@@ -23,3 +23,9 @@ migrate-up1:
 
 migrate-down1:
 	migrate -path migrations -database "$(DB_URL)" -verbose down 1
+
+compose-up:
+	docker compose --env-file ./.env.docker up -d
+
+compose-down:
+	docker compose down
