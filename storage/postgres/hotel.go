@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/SaidovZohid/hotel-project/storage/repo"
 	"github.com/jmoiron/sqlx"
@@ -182,6 +183,7 @@ func (hd *hotelRepo) Update(h *repo.Hotel) error {
 			return err
 		}
 	}
+	log.Println("fffwf")
 	err = tr.Commit()
 	if err != nil {
 		return err
@@ -208,10 +210,11 @@ func (hd *hotelRepo) Delete(hotel_id int64) error {
 
 func (hd *hotelRepo) GetAll(params *repo.GetAllHotelsParams) (*repo.GetAllHotels, error) {
 	offset := (params.Page - 1) * params.Limit 
-	filter := ""
+	filter := " WHERE true "
 	limit := fmt.Sprintf(" LIMIT %d OFFSET %d ", params.Limit, offset)
 	if params.Search != "" {
-		filter = " WHERE hotel_name ILIKE '%s' OR description ILIKE '%s' OR address ILIKE '%s' "
+		str := "%" + params.Search + "%"
+		filter += fmt.Sprintf(" AND hotel_name ILIKE '%s' OR description ILIKE '%s' OR address ILIKE '%s' ", str, str, str)
 	}
 	if params.NumOfRooms != 0 {
 		filter += fmt.Sprintf(" AND num_of_rooms = %d ", params.NumOfRooms)
@@ -286,7 +289,3 @@ func (hd *hotelRepo) GetAll(params *repo.GetAllHotelsParams) (*repo.GetAllHotels
 
 	return &res, nil
 }
-
-// func (hd *hotelRepo) GetAllHotelAvailable(dates *repo.GetAllHotelsDates) (*repo.GetAllHotelsAvailable, error) {
-	
-// }

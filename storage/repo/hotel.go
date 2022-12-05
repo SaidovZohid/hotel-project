@@ -1,7 +1,5 @@
 package repo
 
-import "time"
-
 type Hotel struct {
 	ID          int64
 	HotelName   string
@@ -38,26 +36,4 @@ type HotelImage struct {
 	HotelID        int64
 	ImageUrl       string
 	SequenceNumber int64
-}
-
-type GetHotel struct {
-	ID          int64
-	HotelName   string
-	Description string
-	Address     string
-	ImageUrl    string
-	NumOfRooms  int64
-	ManagerID   int64
-	Images      []*HotelImage
-	Rooms       []*Room
-}
-
-type GetAllHotelsDates struct {
-	Arrival  time.Time `json:"check_in"`
-	CheckOut time.Time `json:"check_out"`
-}
-
-type GetAllHotelsAvailable struct {
-	Hotels []*GetHotel
-	Count  int64
 }

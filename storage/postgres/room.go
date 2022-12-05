@@ -192,3 +192,60 @@ func (ud *roomRepo) GetAll(params *repo.GetAllRoomsParams) (*repo.GetAllRooms, e
 	
 	return &res, nil
 }
+
+func (rd *roomRepo) GetAllHotelRoomsAvailable(params *repo.GetAllRoomsDates) (*repo.GetAllRooms, error) {
+	check_in := params.CheckIn.Format("2006-02-01")
+	check_out := params.CheckOut.Format("2006-02-01")
+	filter := fmt.Sprintf(`(
+		SELECT b.room_id
+		FROM bookings b
+		where b.hotel_id = %d and (b.check_in  BETWEEN '%v' AND '%v' OR  b.check_out  BETWEEN '%v' AND '%v')
+	)
+	`, params.HotelId, check_in, check_out, check_in, check_out)
+	query := `
+		SELECT 
+			r.id,
+			r.room_number,
+			r.hotel_id,
+			r.type,
+			r.description,
+			r.price_per_night,
+			r.status
+		FROM rooms r
+		WHERE r.hotel_id = $1 and r.id NOT IN 
+	` + filter
+	rows, err := rd.db.Query(query, params.HotelId)
+	if err != nil {
+		return nil, err
+	}
+	var rooms repo.GetAllRooms
+	rooms.Rooms = make([]*repo.Room, 0)
+	for rows.Next() {
+		var room repo.Room
+		err := rows.Scan(
+			&room.ID,
+			&room.RoomNumber,
+			&room.HotelID,
+			&room.Type,
+			&room.Description,
+			&room.PricePerNight,
+			&room.Status,
+		)
+		if err != nil {
+			return nil, err
+		}
+		rooms.Rooms = append(rooms.Rooms, &room)
+	}
+	queryCount := `
+		SELECT 
+			count(1)
+		FROM rooms r
+		WHERE r.hotel_id = $1 and r.id NOT IN 
+	` + filter
+	err = rd.db.QueryRow(queryCount, params.HotelId).Scan(&rooms.Count)
+	if err != nil {
+		return nil, err
+	}
+
+ 	return &rooms, nil
+}

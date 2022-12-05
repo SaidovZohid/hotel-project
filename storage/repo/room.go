@@ -1,5 +1,7 @@
 package repo
 
+import "time"
+
 // This is rooms table struct
 type Room struct {
 	ID            int64
@@ -14,6 +16,7 @@ type Room struct {
 type RoomStorageI interface {
 	Create(u *Room) (int64, error)
 	Get(room_id int64) (*Room, error)
+	GetAllHotelRoomsAvailable(params *GetAllRoomsDates) (*GetAllRooms, error)
 	Update(u *Room) error
 	Delete(room_id int64) error
 	GetAll(params *GetAllRoomsParams) (*GetAllRooms, error)
@@ -29,4 +32,10 @@ type GetAllRoomsParams struct {
 type GetAllRooms struct {
 	Rooms []*Room
 	Count int64
+}
+
+type GetAllRoomsDates struct {
+	HotelId  int64     `json:"hotel_id"`
+	CheckIn  time.Time `json:"check_in"`
+	CheckOut time.Time `json:"check_out"`
 }

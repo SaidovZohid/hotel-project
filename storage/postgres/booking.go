@@ -168,3 +168,4 @@ func (bd *bookingRepo) GetAll(params *repo.GetAllBookingsParams) (*repo.GetAllBo
 	}
 	return &res, nil
 }
+

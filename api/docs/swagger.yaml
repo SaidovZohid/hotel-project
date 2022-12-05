@@ -15,7 +15,7 @@ definitions:
       type:
         type: string
     type: object
-  models.CreatHotelReq:
+  models.CreatOrUpdateHotelReq:
     properties:
       address:
         type: string
@@ -31,10 +31,80 @@ definitions:
         type: array
       num_of_rooms:
         type: integer
+    required:
+    - address
+    - description
+    - hotel_name
+    - image_url
+    - images
+    - num_of_rooms
     type: object
   models.CreateHotelImageReq:
     properties:
       imagee_url:
+        type: string
+      sequence_number:
+        type: integer
+    required:
+    - imagee_url
+    - sequence_number
+    type: object
+  models.CreateOrUpdateRoom:
+    properties:
+      description:
+        type: string
+      hotel_id:
+        type: integer
+      price_per_night:
+        type: number
+      room_number:
+        type: integer
+      type:
+        type: string
+    required:
+    - description
+    - hotel_id
+    - price_per_night
+    - room_number
+    - type
+    type: object
+  models.GetAllHotels:
+    properties:
+      count:
+        type: integer
+      hotels:
+        items:
+          $ref: '#/definitions/models.GetHotelInfo'
+        type: array
+    type: object
+  models.GetHotelInfo:
+    properties:
+      address:
+        type: string
+      description:
+        type: string
+      hotel_name:
+        type: string
+      id:
+        type: integer
+      image_url:
+        type: string
+      images:
+        items:
+          $ref: '#/definitions/models.HotelImage'
+        type: array
+      manager_id:
+        type: integer
+      num_of_rooms:
+        type: integer
+    type: object
+  models.HotelImage:
+    properties:
+      hotel_id:
+        type: integer
+      id:
+        type: integer
+      image_url:
         type: string
       sequence_number:
         type: integer
@@ -78,9 +148,15 @@ definitions:
       error:
         type: string
     type: object
+  models.ResponseId:
+    properties:
+      message:
+        type: integer
+    type: object
   models.ResponseOK:
     properties:
-      message: {}
+      message:
+        type: string
     type: object
   models.VerifyRequest:
     properties:
@@ -142,7 +218,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.AuthResponse'
+            $ref: '#/definitions/models.ResponseOK'
         "500":
           description: Internal Server Error
           schema:
@@ -177,6 +253,41 @@ paths:
       tags:
       - register
   /hotels:
+    get:
+      consumes:
+      - application/json
+      description: Get All hotel
+      parameters:
+      - default: 10
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - in: query
+        name: num_of_rooms
+        type: integer
+      - default: 1
+        in: query
+        name: page
+        required: true
+        type: integer
+      - in: query
+        name: search
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetAllHotels'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Get All hotel
+      tags:
+      - hotel
     post:
       consumes:
       - application/json
@@ -187,7 +298,34 @@ paths:
         name: data
         required: true
         schema:
-          $ref: '#/definitions/models.CreatHotelReq'
+          $ref: '#/definitions/models.CreatOrUpdateHotelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseId'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Create hotel
+      tags:
+      - hotel
+  /hotels/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete hotel
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -201,9 +339,91 @@ paths:
             $ref: '#/definitions/models.ResponseError'
       security:
       - ApiKeyAuth: []
-      summary: Create hotel
+      summary: Delete hotel
       tags:
       - hotel
+    get:
+      consumes:
+      - application/json
+      description: Get hotel
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetHotelInfo'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Get hotel
+      tags:
+      - hotel
+    put:
+      consumes:
+      - application/json
+      description: Update hotel
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreatOrUpdateHotelReq'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseOK'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Update hotel
+      tags:
+      - hotel
+  /rooms:
+    post:
+      consumes:
+      - application/json
+      description: Create room
+      parameters:
+      - description: Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateOrUpdateRoom'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseId'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Create room
+      tags:
+      - room
 securityDefinitions:
   ApiKeyAuth:
     in: header

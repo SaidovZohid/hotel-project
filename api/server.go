@@ -38,6 +38,17 @@ func New(opt *RouteOptions) *gin.Engine {
 	api.POST("/auth/login", handler.Login)
 
 	api.POST("/hotels", handler.AuthMiddleWare, handler.CreateHotel)
+	api.GET("/hotels/:id", handler.GetHotel)
+	api.PUT("/hotels/:id", handler.AuthMiddleWare, handler.UpdateHotel)
+	api.DELETE("/hotels/:id", handler.AuthMiddleWare, handler.DeleteHotel)
+	api.GET("/hotels", handler.GetAllHotels)
+
+	api.POST("/rooms", handler.AuthMiddleWare, handler.CreateRoom)
+	// api.GET("/hotels/:id", handler.GetRoom)
+	// api.PUT("/hotels/:id", handler.UpdateRoom)
+	// api.DELETE("/hotels/:id", handler.DeleteRoom)
+	// api.GET("/hotels", handler.GetAllRooms)
+
 
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 	return router

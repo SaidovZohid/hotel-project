@@ -22,7 +22,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param data body models.RegisterRequest true "Data"
-// @Success 200 {object} models.AuthResponse
+// @Success 200 {object} models.ResponseOK
 // @Failure 500 {object} models.ResponseError
 func (h *handlerV1) Register(ctx *gin.Context) {
 	var (
@@ -57,7 +57,7 @@ func (h *handlerV1) Register(ctx *gin.Context) {
 		return
 	}
 
-	err = h.inMemory.Set(RegisterInfo + req.Email, string(userData), 10*time.Minute)
+	err = h.inMemory.Set(RegisterInfo+req.Email, string(userData), 10*time.Minute)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
@@ -107,7 +107,7 @@ func (h *handlerV1) Verify(ctx *gin.Context) {
 		return
 	}
 
-	code, err := h.inMemory.Get(RegisterCodeKey+req.Email)
+	code, err := h.inMemory.Get(RegisterCodeKey + req.Email)
 	if err != nil {
 		ctx.JSON(http.StatusForbidden, errResponse(ErrCodeExpired))
 		return
@@ -200,4 +200,3 @@ func (h *handlerV1) Login(ctx *gin.Context) {
 		AccessToken: token,
 	})
 }
-

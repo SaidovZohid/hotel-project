@@ -1,7 +1,10 @@
 package v1
 
 import (
+	"database/sql"
+	"errors"
 	"net/http"
+	"strconv"
 
 	"github.com/SaidovZohid/hotel-project/api/models"
 	"github.com/SaidovZohid/hotel-project/storage/postgres"
@@ -16,12 +19,12 @@ import (
 // @Tags hotel
 // @Accept json
 // @Produce json
-// @Param data body models.CreatHotelReq true "Data"
-// @Success 200 {object} models.ResponseOK
+// @Param data body models.CreatOrUpdateHotelReq true "Data"
+// @Success 200 {object} models.ResponseId
 // @Failure 500 {object} models.ResponseError
 func (h *handlerV1) CreateHotel(ctx *gin.Context) {
 	var (
-		req models.CreatHotelReq
+		req models.CreatOrUpdateHotelReq
 	)
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -66,7 +69,210 @@ func (h *handlerV1) CreateHotel(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, models.ResponseOK{
+	ctx.JSON(http.StatusCreated, models.ResponseId{
 		Message: hotel_id,
 	})
+}
+
+// @Router /hotels/{id} [get]
+// @Summary Get hotel
+// @Description Get hotel
+// @Tags hotel
+// @Accept json
+// @Produce json
+// @Param id path int true "ID"
+// @Success 200 {object} models.GetHotelInfo
+// @Failure 500 {object} models.ResponseError
+func (h *handlerV1) GetHotel(ctx *gin.Context) {
+	hotel_id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	hotel, err := h.strg.Hotel().Get(hotel_id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+	res := models.GetHotelInfo{
+		ID:          hotel.ID,
+		HotelName:   hotel.HotelName,
+		Description: hotel.Description,
+		Address:     hotel.Address,
+		ImageUrl:    hotel.ImageUrl,
+		NumOfRooms:  hotel.NumOfRooms,
+		ManagerID:   hotel.ManagerID,
+	}
+	for _, image := range hotel.Images {
+		res.Images = append(res.Images, &models.HotelImage{
+			ID:             image.ID,
+			HotelID:        image.HotelID,
+			ImageUrl:       image.ImageUrl,
+			SequenceNumber: image.SequenceNumber,
+		})
+	}
+
+	ctx.JSON(http.StatusOK, res)
+}
+
+// @Security ApiKeyAuth
+// @Router /hotels/{id} [put]
+// @Summary Update hotel
+// @Description Update hotel
+// @Tags hotel
+// @Accept json
+// @Produce json
+// @Param id path int true "ID"
+// @Param data body models.CreatOrUpdateHotelReq true "Data"
+// @Success 200 {object} models.ResponseOK
+// @Failure 500 {object} models.ResponseError
+func (h *handlerV1) UpdateHotel(ctx *gin.Context) {
+	hotel_id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	hotel, err := h.strg.Hotel().Get(hotel_id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+	payload, err := h.GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, errResponse(err))
+		return
+	}
+	if payload.UserID != hotel.ManagerID {
+		ctx.JSON(http.StatusForbidden, errResponse(err))
+		return
+	}
+
+	var (
+		req models.CreatOrUpdateHotelReq
+	)
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	var res repo.Hotel
+	for _, image := range req.Images {
+		i := repo.HotelImage{
+			HotelID:        hotel_id,
+			ImageUrl:       image.ImageUrl,
+			SequenceNumber: image.SequenceNumber,
+		}
+		res.Images = append(res.Images, &i)
+	}
+	res = repo.Hotel{
+		ID:          hotel_id,
+		HotelName:   req.HotelName,
+		Description: req.Description,
+		Address:     req.Address,
+		ImageUrl:    req.ImageUrl,
+		NumOfRooms:  req.NumOfRooms,
+		Images:      res.Images,
+	}
+
+	err = h.strg.Hotel().Update(&res)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.ResponseOK{
+		Message: "Succesfuly updated!",
+	})
+}
+
+// @Security ApiKeyAuth
+// @Router /hotels/{id} [delete]
+// @Summary Delete hotel
+// @Description Delete hotel
+// @Tags hotel
+// @Accept json
+// @Produce json
+// @Param id path int true "ID"
+// @Success 200 {object} models.ResponseOK
+// @Failure 500 {object} models.ResponseError
+func (h *handlerV1) DeleteHotel(ctx *gin.Context) {
+	hotel_id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+
+	hotel, err := h.strg.Hotel().Get(hotel_id)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			ctx.JSON(http.StatusNotFound, errResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+	payload, err := h.GetAuthPayload(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+	if payload.UserID != hotel.ManagerID {
+		ctx.JSON(http.StatusForbidden, errResponse(err))
+		return
+	}
+
+	err = h.strg.Hotel().Delete(hotel_id)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	err = h.strg.User().ChangeTypeUser(postgres.UserType, payload.UserID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.ResponseOK{
+		Message: "Succesfully Deleted!",
+	})
+}
+
+// @Router /hotels [get]
+// @Summary Get All hotel
+// @Description Get All hotel
+// @Tags hotel
+// @Accept json
+// @Produce json
+// @Param param query models.GetAllHotelsParams false "Param"
+// @Success 200 {object} models.GetAllHotels
+// @Failure 500 {object} models.ResponseError
+func (h *handlerV1) GetAllHotels(ctx *gin.Context) {
+	params, err := validateHotelParams(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errResponse(err))
+		return
+	}
+	hotels, err := h.strg.Hotel().GetAll(&repo.GetAllHotelsParams{
+		Limit:      params.Limit,
+		Page:       params.Page,
+		Search:     params.Search,
+		NumOfRooms: params.NumOfRooms,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, getHotels(hotels))
 }
