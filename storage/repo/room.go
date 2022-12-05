@@ -19,10 +19,10 @@ type RoomStorageI interface {
 	GetAllHotelRoomsAvailable(params *GetAllRoomsDates) (*GetAllRooms, error)
 	Update(u *Room) error
 	Delete(room_id int64) error
-	GetAll(params *GetAllRoomsParams) (*GetAllRooms, error)
+	GetAll(params *GetAllParams) (*GetAllRooms, error)
 }
 
-type GetAllRoomsParams struct {
+type GetAllParams struct {
 	Limit  int64
 	Page   int64
 	Search string
@@ -35,7 +35,7 @@ type GetAllRooms struct {
 }
 
 type GetAllRoomsDates struct {
-	HotelId  int64     `json:"hotel_id"`
-	CheckIn  time.Time `json:"check_in"`
-	CheckOut time.Time `json:"check_out"`
+	HotelId  int64
+	CheckIn  time.Time
+	CheckOut time.Time
 }

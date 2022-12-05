@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/SaidovZohid/hotel-project/storage/repo"
@@ -111,9 +112,16 @@ func (bd *bookingRepo) Update(b *repo.Booking) error {
 
 func (bd *bookingRepo) Delete(booking_id int64) error {
 	query := " DELETE FROM bookings WHERE id = $1"
-	_, err := bd.db.Exec(query, booking_id)
+	res, err := bd.db.Exec(query, booking_id)
 	if err != nil {
 		return err
+	}
+	result, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if result == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil
@@ -169,3 +177,53 @@ func (bd *bookingRepo) GetAll(params *repo.GetAllBookingsParams) (*repo.GetAllBo
 	return &res, nil
 }
 
+func (bd *bookingRepo) GetAllHotelsBookings(params *repo.GetAllHotelsBookingsParams) (*repo.GetAllBookings, error) {
+	var res repo.GetAllBookings
+	res.Bookings = make([]*repo.Booking, 0)
+	offset := (params.Page - 1) * params.Limit
+	filter := fmt.Sprintf(" WHERE hotel_id = %d ", params.HotelID)
+	orderBy := " ORDER BY booked_at DESC"
+	limit := fmt.Sprintf(" LIMIT %d OFFSET %d ", params.Limit, offset)
+	if params.SortBy != "" {
+		orderBy = " ORDER BY booked_at " + params.SortBy
+	}
+	query := `
+		SELECT
+			id,
+			check_in,
+			check_out,
+			hotel_id,
+			room_id,
+			user_id,
+			booked_at
+		FROM bookings
+	` + filter + orderBy + limit
+	rows, err := bd.db.Query(query)
+	if err != nil {
+		return nil, err
+	}
+	for rows.Next() {
+		var b repo.Booking
+		err := bd.db.QueryRow(
+			query,
+		).Scan(
+			&b.ID,
+			&b.CheckIn,
+			&b.CheckOut,
+			&b.HotelID,
+			&b.RoomID,
+			&b.UserID,
+			&b.BookedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		res.Bookings = append(res.Bookings, &b)
+	}
+	queryCount := "SELECT count(1) FROM bookings" + filter
+	err = bd.db.QueryRow(queryCount).Scan(&res.Count)
+	if err != nil {
+		return nil, err
+	}
+	return &res, nil
+}

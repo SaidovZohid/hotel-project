@@ -130,6 +130,63 @@ func (hd *hotelRepo) Get(hotel_id int64) (*repo.Hotel, error) {
 	return &res, nil
 }
 
+func (hd *hotelRepo) GetByManagerID(manager_id int64) (*repo.Hotel, error) {
+	query := `
+		SELECT 
+			id,
+			manager_id,
+			hotel_name,
+			description,
+			address,
+			image_url,
+			num_of_rooms
+		FROM hotels WHERE manager_id = $1
+	`
+	var res repo.Hotel
+	err := hd.db.QueryRow(query, manager_id).Scan(
+		&res.ID,
+		&res.ManagerID,
+		&res.HotelName,
+		&res.Description,
+		&res.Address,
+		&res.ImageUrl,
+		&res.NumOfRooms,
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	queryImages := `
+		SELECT 
+			id,
+			hotel_id,
+			image_url,
+			sequence_number
+		FROM hotel_images WHERE hotel_id = $1
+	`
+	rows, err := hd.db.Query(queryImages, res.ID)
+	if err != nil {
+		return nil, err
+	}
+
+	for rows.Next() {
+		var image repo.HotelImage
+		err := rows.Scan(
+			&image.ID,
+			&image.HotelID,
+			&image.ImageUrl,
+			&image.SequenceNumber,
+		)
+		if err != nil {
+			return nil, err
+		}
+
+		res.Images = append(res.Images, &image)
+	}
+
+	return &res, nil
+}
+
 func (hd *hotelRepo) Update(h *repo.Hotel) error {
 	tr, err := hd.db.Begin()
 	defer tr.Rollback()
@@ -193,8 +250,14 @@ func (hd *hotelRepo) Update(h *repo.Hotel) error {
 }
 
 func (hd *hotelRepo) Delete(hotel_id int64) error {
+	queryRoomDelete := "DELETE FROM rooms WHERE hotel_id = $1"
+	_, err := hd.db.Exec(queryRoomDelete, hotel_id)
+	if err != nil {
+		return err
+	}
+	
 	queryImageDelete := "DELETE FROM hotel_images WHERE hotel_id = $1"
-	_, err := hd.db.Exec(queryImageDelete, hotel_id)
+	_, err = hd.db.Exec(queryImageDelete, hotel_id)
 	if err != nil {
 		return err
 	}

@@ -113,6 +113,32 @@ func validateHotelParams(ctx *gin.Context) (*models.GetAllHotelsParams, error) {
 	}, nil
 }
 
+func validateRoomParams(ctx *gin.Context) (*models.GetAllParams, error) {
+	var (
+		limit int64 = 10
+		page  int64 = 1
+		err   error
+	)
+	if ctx.Query("limit") != "" {
+		limit, err = strconv.ParseInt(ctx.Query("limit"), 10, 64)
+		if err != nil {
+			return nil, err
+		}
+	}
+	if ctx.Query("page") != "" {
+		page, err = strconv.ParseInt(ctx.Query("page"), 10, 64)
+		if err != nil {
+			return nil, err
+		}
+	}
+	return &models.GetAllParams{
+		Limit:  limit,
+		Page:   page,
+		Search: ctx.Query("search"),
+		SortBy: ctx.Query("sort_by"),
+	}, nil
+}
+
 func getHotels(hotels *repo.GetAllHotels) models.GetAllHotels {
 	var res models.GetAllHotels
 	res.Hotels = make([]*models.GetHotelInfo, 0)
@@ -137,6 +163,64 @@ func getHotels(hotels *repo.GetAllHotels) models.GetAllHotels {
 			h.Images = append(h.Images, &i)
 		}
 		res.Hotels = append(res.Hotels, &h)
+	}
+	return res
+}
+
+func getRooms(rooms *repo.GetAllRooms) models.GetAllRooms {
+	var res models.GetAllRooms
+	res.Rooms = make([]*models.GetRoomInfo, 0)
+	res.Count = rooms.Count
+	for _, room := range rooms.Rooms {
+		r := models.GetRoomInfo{
+			ID:            room.ID,
+			RoomNumber:    room.RoomNumber,
+			HotelID:       room.HotelID,
+			Type:          room.Type,
+			Description:   room.Description,
+			PricePerNight: room.PricePerNight,
+			Status:        room.Status,
+		}
+		res.Rooms = append(res.Rooms, &r)
+	}
+	return res
+}
+
+func getAllUsers(users *repo.GetAllUsers) models.GetAllUsers {
+	var res models.GetAllUsers
+	res.Users = make([]*models.GetUser, 0)
+	res.Count = users.Count
+	for _, user := range users.Users {
+		r := models.GetUser{
+			ID:          user.ID,
+			FirstName:   user.FirstName,
+			LastName:    user.LastName,
+			Email:       user.Email,
+			PhoneNumber: user.PhoneNumber,
+			Type:        user.Type,
+			CreatedAt:   user.CreatedAt,
+			UpdatedAt:   user.UpdatedAt,
+		}
+		res.Users = append(res.Users, &r)
+	}
+	return res
+}
+
+func getBookings(bookings *repo.GetAllBookings) models.GetAllBookings {
+	var res models.GetAllBookings
+	res.Bookings = make([]*models.GetBooking, 0)
+	res.Count = bookings.Count
+	for _, booking := range bookings.Bookings {
+		b := models.GetBooking{
+			ID:       booking.ID,
+			CheckIn:  booking.CheckIn,
+			CheckOut: booking.CheckOut,
+			HotelID:  booking.HotelID,
+			RoomID:   booking.RoomID,
+			UserID:   booking.UserID,
+			BookedAt: booking.BookedAt,
+		}
+		res.Bookings = append(res.Bookings, &b)
 	}
 	return res
 }

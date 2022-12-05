@@ -14,6 +14,7 @@ type Hotel struct {
 type HotelStorageI interface {
 	Create(h *Hotel) (int64, error)
 	Get(hotel_id int64) (*Hotel, error)
+	GetByManagerID(manager_id int64) (*Hotel, error)
 	Update(h *Hotel) error
 	Delete(hotel_id int64) error
 	GetAll(params *GetAllHotelsParams) (*GetAllHotels, error)

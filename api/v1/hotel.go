@@ -5,8 +5,10 @@ import (
 	"errors"
 	"net/http"
 	"strconv"
+	"time"
 
 	"github.com/SaidovZohid/hotel-project/api/models"
+	"github.com/SaidovZohid/hotel-project/pkg/utils"
 	"github.com/SaidovZohid/hotel-project/storage/postgres"
 	"github.com/SaidovZohid/hotel-project/storage/repo"
 	"github.com/gin-gonic/gin"
@@ -20,7 +22,7 @@ import (
 // @Accept json
 // @Produce json
 // @Param data body models.CreatOrUpdateHotelReq true "Data"
-// @Success 200 {object} models.ResponseId
+// @Success 200 {object} models.GetIdAndToken
 // @Failure 500 {object} models.ResponseError
 func (h *handlerV1) CreateHotel(ctx *gin.Context) {
 	var (
@@ -68,9 +70,20 @@ func (h *handlerV1) CreateHotel(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
 		return
 	}
+	token, _, err := utils.CreateToken(h.cfg, &utils.TokenParams{
+		UserID:   payload.UserID,
+		Email:    payload.Email,
+		UserType: postgres.ManagerType,
+		Duration: time.Hour * 24 * 30,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
 
-	ctx.JSON(http.StatusCreated, models.ResponseId{
-		Message: hotel_id,
+	ctx.JSON(http.StatusCreated, models.GetIdAndToken{
+		ID:          hotel_id,
+		AccessToken: token,
 	})
 }
 
@@ -203,7 +216,7 @@ func (h *handlerV1) UpdateHotel(ctx *gin.Context) {
 // @Accept json
 // @Produce json
 // @Param id path int true "ID"
-// @Success 200 {object} models.ResponseOK
+// @Success 200 {object} models.GetIdAndToken
 // @Failure 500 {object} models.ResponseError
 func (h *handlerV1) DeleteHotel(ctx *gin.Context) {
 	hotel_id, err := strconv.ParseInt(ctx.Param("id"), 10, 64)
@@ -231,6 +244,7 @@ func (h *handlerV1) DeleteHotel(ctx *gin.Context) {
 		return
 	}
 
+	
 	err = h.strg.Hotel().Delete(hotel_id)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errResponse(err))
@@ -243,8 +257,20 @@ func (h *handlerV1) DeleteHotel(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, models.ResponseOK{
-		Message: "Succesfully Deleted!",
+	token, _, err := utils.CreateToken(h.cfg, &utils.TokenParams{
+		UserID:   payload.UserID,
+		Email:    payload.Email,
+		UserType: postgres.UserType,
+		Duration: time.Hour * 24 * 30,
+	})
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, models.GetIdAndToken{
+		ID:          payload.UserID,
+		AccessToken: token,
 	})
 }
 

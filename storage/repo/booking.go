@@ -18,6 +18,7 @@ type BookingStorageI interface {
 	Update(b *Booking) error
 	Delete(booking_id int64) error
 	GetAll(params *GetAllBookingsParams) (*GetAllBookings, error)
+	GetAllHotelsBookings(params *GetAllHotelsBookingsParams) (*GetAllBookings, error)
 }
 
 type GetAllBookings struct {
@@ -30,4 +31,12 @@ type GetAllBookingsParams struct {
 	Page   int64
 	Search string
 	SortBy string
+}
+
+type GetAllHotelsBookingsParams struct {
+	HotelID int64
+	Limit   int64
+	Page    int64
+	Search  string
+	SortBy  string
 }

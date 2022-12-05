@@ -59,7 +59,7 @@ func TestDeleteRoom(t *testing.T) {
 
 func TestGetAllRooms(t *testing.T) {
 	room_id := createRoom(t)
-	rooms, err := dbManager.Room().GetAll(&repo.GetAllRoomsParams{
+	rooms, err := dbManager.Room().GetAll(&repo.GetAllParams{
 		Limit: 10,
 		Page:  1,
 	})

@@ -14,6 +14,11 @@ type CreateHotelImageReq struct {
 	SequenceNumber int64  `json:"sequence_number" binding:"required"`
 }
 
+type GetIdAndToken struct {
+	ID          int64  `json:"id"`
+	AccessToken string `json:"access_token"`
+}
+
 type GetHotelInfo struct {
 	ID          int64         `json:"id"`
 	HotelName   string        `json:"hotel_name"`

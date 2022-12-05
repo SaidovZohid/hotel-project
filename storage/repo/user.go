@@ -22,6 +22,7 @@ type UserStorageI interface {
 	Get(user_id int64) (*User, error)
 	GetByEmail(email string) (*User, error)
 	Update(u *User) (*time.Time, error)
+	UpdatePassword(u *UpdatePassword) error
 	Delete(user_id int64) error
 	GetAll(params *GetAllUsersParams) (*GetAllUsers, error)
 }
@@ -36,4 +37,9 @@ type GetAllUsersParams struct {
 type GetAllUsers struct {
 	Users []*User
 	Count int64
+}
+
+type UpdatePassword struct {
+	UserId   int64
+	Password string
 }

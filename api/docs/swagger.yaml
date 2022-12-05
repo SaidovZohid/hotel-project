@@ -49,6 +49,22 @@ definitions:
     - imagee_url
     - sequence_number
     type: object
+  models.CreateOrUpdateBooking:
+    properties:
+      check_in:
+        type: string
+      check_out:
+        type: string
+      hotel_id:
+        type: integer
+      room_id:
+        type: integer
+    required:
+    - check_in
+    - check_out
+    - hotel_id
+    - room_id
+    type: object
   models.CreateOrUpdateRoom:
     properties:
       description:
@@ -60,6 +76,11 @@ definitions:
       room_number:
         type: integer
       type:
+        default: single
+        enum:
+        - family
+        - single
+        - double
         type: string
     required:
     - description
@@ -67,6 +88,22 @@ definitions:
     - price_per_night
     - room_number
     - type
+    type: object
+  models.ForgotPasswordRequest:
+    properties:
+      email:
+        type: string
+    required:
+    - email
+    type: object
+  models.GetAllBookings:
+    properties:
+      bookings:
+        items:
+          $ref: '#/definitions/models.GetBooking'
+        type: array
+      count:
+        type: integer
     type: object
   models.GetAllHotels:
     properties:
@@ -76,6 +113,41 @@ definitions:
         items:
           $ref: '#/definitions/models.GetHotelInfo'
         type: array
+    type: object
+  models.GetAllRooms:
+    properties:
+      count:
+        type: integer
+      rooms:
+        items:
+          $ref: '#/definitions/models.GetRoomInfo'
+        type: array
+    type: object
+  models.GetAllUsers:
+    properties:
+      count:
+        type: integer
+      users:
+        items:
+          $ref: '#/definitions/models.GetUser'
+        type: array
+    type: object
+  models.GetBooking:
+    properties:
+      booked_at:
+        type: string
+      check_in:
+        type: string
+      check_out:
+        type: string
+      hotel_id:
+        type: integer
+      id:
+        type: integer
+      room_id:
+        type: integer
+      user_id:
+        type: integer
     type: object
   models.GetHotelInfo:
     properties:
@@ -97,6 +169,51 @@ definitions:
         type: integer
       num_of_rooms:
         type: integer
+    type: object
+  models.GetIdAndToken:
+    properties:
+      access_token:
+        type: string
+      id:
+        type: integer
+    type: object
+  models.GetRoomInfo:
+    properties:
+      description:
+        type: string
+      hotel_id:
+        type: integer
+      id:
+        type: integer
+      price_per_night:
+        type: number
+      room_number:
+        type: integer
+      status:
+        type: boolean
+      type:
+        type: string
+    type: object
+  models.GetUser:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      last_name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+      type:
+        type: string
+      updated_at:
+        type: string
     type: object
   models.HotelImage:
     properties:
@@ -158,6 +275,59 @@ definitions:
       message:
         type: string
     type: object
+  models.ResponseUpdatedAt:
+    properties:
+      updated_at:
+        type: string
+    type: object
+  models.UpdatePasswordRequest:
+    properties:
+      password:
+        type: string
+    required:
+    - password
+    type: object
+  models.UpdateUser:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      phone_number:
+        type: string
+      type:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - phone_number
+    - type
+    type: object
+  models.User:
+    properties:
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+      type:
+        type: string
+    required:
+    - email
+    - first_name
+    - last_name
+    - password
+    - phone_number
+    - type
+    type: object
   models.VerifyRequest:
     properties:
       code:
@@ -174,6 +344,32 @@ info:
   description: This is a hotel service api.
   version: "2.0"
 paths:
+  /auth/forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Forgot  password
+      parameters:
+      - description: Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.ForgotPasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseOK'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: GetAllParams  password
+      tags:
+      - auth
   /auth/login:
     post:
       consumes:
@@ -226,6 +422,34 @@ paths:
       summary: Register user
       tags:
       - register
+  /auth/update-password:
+    post:
+      consumes:
+      - application/json
+      description: Update password
+      parameters:
+      - description: Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdatePasswordRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseOK'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Update password
+      tags:
+      - auth
   /auth/verify:
     post:
       consumes:
@@ -252,6 +476,259 @@ paths:
       summary: Veriy your account with code which we sent
       tags:
       - register
+  /auth/verify-forgot-password:
+    post:
+      consumes:
+      - application/json
+      description: Verify forgot password
+      parameters:
+      - description: Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.VerifyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.AuthResponse'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Verify forgot password
+      tags:
+      - auth
+  /bookings:
+    get:
+      consumes:
+      - application/json
+      description: Get All bookings  for superadmin
+      parameters:
+      - default: 10
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - default: 1
+        in: query
+        name: page
+        required: true
+        type: integer
+      - in: query
+        name: search
+        type: string
+      - default: desc
+        enum:
+        - desc
+        - asc
+        in: query
+        name: sort_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetAllBookings'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Get All bookings for superadmin
+      tags:
+      - booking
+  /bookings/:
+    post:
+      consumes:
+      - application/json
+      description: Create booking
+      parameters:
+      - description: Data
+        in: body
+        name: '"data"'
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateOrUpdateBooking'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseId'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Create booking
+      tags:
+      - booking
+  /bookings/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete booking
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseOK'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete booking
+      tags:
+      - booking
+    get:
+      consumes:
+      - application/json
+      description: Get booking
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetBooking'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Get booking
+      tags:
+      - booking
+    put:
+      consumes:
+      - application/json
+      description: Update booking
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateOrUpdateBooking'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseOK'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Update booking
+      tags:
+      - booking
+  /bookings/hotel/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get All bookings  for superadmin and manager
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - default: 10
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - default: 1
+        in: query
+        name: page
+        required: true
+        type: integer
+      - in: query
+        name: search
+        type: string
+      - default: desc
+        enum:
+        - desc
+        - asc
+        in: query
+        name: sort_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetAllBookings'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Get All bookings for superadmin and manager
+      tags:
+      - booking
+  /file_upload:
+    post:
+      consumes:
+      - application/json
+      description: File upload
+      parameters:
+      - description: File
+        in: formData
+        name: file
+        required: true
+        type: file
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseOK'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: File upload
+      tags:
+      - file-upload
   /hotels:
     get:
       consumes:
@@ -305,7 +782,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ResponseId'
+            $ref: '#/definitions/models.GetIdAndToken'
         "500":
           description: Internal Server Error
           schema:
@@ -332,7 +809,7 @@ paths:
         "200":
           description: OK
           schema:
-            $ref: '#/definitions/models.ResponseOK'
+            $ref: '#/definitions/models.GetIdAndToken'
         "500":
           description: Internal Server Error
           schema:
@@ -399,6 +876,45 @@ paths:
       tags:
       - hotel
   /rooms:
+    get:
+      consumes:
+      - application/json
+      description: Get All rooms
+      parameters:
+      - default: 10
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - default: 1
+        in: query
+        name: page
+        required: true
+        type: integer
+      - in: query
+        name: search
+        type: string
+      - default: desc
+        enum:
+        - desc
+        - asc
+        in: query
+        name: sort_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetAllRooms'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Get All rooms
+      tags:
+      - room
     post:
       consumes:
       - application/json
@@ -421,9 +937,298 @@ paths:
           description: Internal Server Error
           schema:
             $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
       summary: Create room
       tags:
       - room
+  /rooms/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete room
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseOK'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete room
+      tags:
+      - room
+    get:
+      consumes:
+      - application/json
+      description: Get room
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetRoomInfo'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Get room
+      tags:
+      - room
+    put:
+      consumes:
+      - application/json
+      description: Update room
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Data
+        in: body
+        name: data
+        required: true
+        schema:
+          $ref: '#/definitions/models.CreateOrUpdateRoom'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseOK'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Update room
+      tags:
+      - room
+  /rooms/available/{id}:
+    get:
+      consumes:
+      - application/json
+      description: Get All rooms
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - in: query
+        name: check_in
+        required: true
+        type: string
+      - in: query
+        name: check_out
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetAllRooms'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Get All rooms
+      tags:
+      - room
+  /users:
+    get:
+      consumes:
+      - application/json
+      description: Get all user
+      parameters:
+      - default: 10
+        in: query
+        name: limit
+        required: true
+        type: integer
+      - default: 1
+        in: query
+        name: page
+        required: true
+        type: integer
+      - in: query
+        name: search
+        type: string
+      - default: desc
+        enum:
+        - desc
+        - asc
+        in: query
+        name: sort_by
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetAllUsers'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Get all user
+      tags:
+      - user
+    post:
+      consumes:
+      - application/json
+      description: Create user
+      parameters:
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.User'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseId'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Create user
+      tags:
+      - user
+  /users/{id}:
+    delete:
+      consumes:
+      - application/json
+      description: Delete user
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseOK'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Delete user
+      tags:
+      - user
+    get:
+      consumes:
+      - application/json
+      description: Get user
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetUser'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      summary: Get user
+      tags:
+      - user
+    put:
+      consumes:
+      - application/json
+      description: Update user
+      parameters:
+      - description: ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: User
+        in: body
+        name: user
+        required: true
+        schema:
+          $ref: '#/definitions/models.UpdateUser'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.ResponseUpdatedAt'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Update user
+      tags:
+      - user
+  /users/profile:
+    get:
+      consumes:
+      - application/json
+      description: Get user profile
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.GetUser'
+        "500":
+          description: Internal Server Error
+          schema:
+            $ref: '#/definitions/models.ResponseError'
+      security:
+      - ApiKeyAuth: []
+      summary: Get user profile
+      tags:
+      - user
 securityDefinitions:
   ApiKeyAuth:
     in: header

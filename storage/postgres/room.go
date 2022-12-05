@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 
 	"github.com/SaidovZohid/hotel-project/storage/repo"
@@ -123,24 +124,31 @@ func (ud *roomRepo) Get(room_id int64) (*repo.Room, error) {
 // This function for deleting room. It takes room id and returns nil, if there is error it will error
 func (ud *roomRepo) Delete(room_id int64) error {
 	query := "DELETE FROM rooms WHERE id = $1"
-	_, err := ud.db.Exec(
+	result, err := ud.db.Exec(
 		query,
 		room_id,
 	)
 	if err != nil {
 		return err
 	}
+	res, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if res == 0 {
+		return sql.ErrNoRows
+	}
 
 	return nil
 }
 
 // This function for getting all rooms info. It takes params and returns all rooms info and nil values, if it has an error it will return nil and error values
-func (ud *roomRepo) GetAll(params *repo.GetAllRoomsParams) (*repo.GetAllRooms, error) {
+func (ud *roomRepo) GetAll(params *repo.GetAllParams) (*repo.GetAllRooms, error) {
 	var res repo.GetAllRooms
 	res.Rooms = make([]*repo.Room, 0)
-	offset := (params.Page - 1) *params.Limit
+	offset := (params.Page - 1) * params.Limit
 	limit := fmt.Sprintf(" LIMIT %d OFFSET %d ", params.Limit, offset)
-	orderBy := " ORDER BY price_per_night DESC " 
+	orderBy := " ORDER BY price_per_night DESC "
 	filter := " WHERE status = true "
 	if params.Search != "" {
 		str := "%" + params.Search + "%"
@@ -188,14 +196,14 @@ func (ud *roomRepo) GetAll(params *repo.GetAllRoomsParams) (*repo.GetAllRooms, e
 	err = ud.db.QueryRow(queryCount).Scan(&res.Count)
 	if err != nil {
 		return nil, err
-	} 
-	
+	}
+
 	return &res, nil
 }
 
 func (rd *roomRepo) GetAllHotelRoomsAvailable(params *repo.GetAllRoomsDates) (*repo.GetAllRooms, error) {
-	check_in := params.CheckIn.Format("2006-02-01")
-	check_out := params.CheckOut.Format("2006-02-01")
+	check_in := params.CheckIn.Format("2006-01-02")
+	check_out := params.CheckOut.Format("2006-01-02")
 	filter := fmt.Sprintf(`(
 		SELECT b.room_id
 		FROM bookings b
@@ -212,7 +220,7 @@ func (rd *roomRepo) GetAllHotelRoomsAvailable(params *repo.GetAllRoomsDates) (*r
 			r.price_per_night,
 			r.status
 		FROM rooms r
-		WHERE r.hotel_id = $1 and r.id NOT IN 
+		WHERE r.status = true and r.hotel_id = $1 and r.id NOT IN 
 	` + filter
 	rows, err := rd.db.Query(query, params.HotelId)
 	if err != nil {
@@ -240,12 +248,12 @@ func (rd *roomRepo) GetAllHotelRoomsAvailable(params *repo.GetAllRoomsDates) (*r
 		SELECT 
 			count(1)
 		FROM rooms r
-		WHERE r.hotel_id = $1 and r.id NOT IN 
+		WHERE r.status = true and r.hotel_id = $1 and r.id NOT IN 
 	` + filter
 	err = rd.db.QueryRow(queryCount, params.HotelId).Scan(&rooms.Count)
 	if err != nil {
 		return nil, err
 	}
 
- 	return &rooms, nil
+	return &rooms, nil
 }

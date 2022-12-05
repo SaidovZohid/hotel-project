@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"database/sql"
 	"fmt"
 	"time"
 
@@ -179,13 +180,21 @@ func (ud *userRepo) Delete(user_id int64) error {
 			deleted_at = $1
 		WHERE id = $2
 	`
-	_, err := ud.db.Exec(
+	result, err := ud.db.Exec(
 		query,
 		time.Now(),
 		user_id,
 	)
 	if err != nil {
 		return err
+	}
+	
+	res, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if res == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil
@@ -262,6 +271,23 @@ func (ud *userRepo) ChangeTypeUser(user_type string, user_id int64) error {
 	_, err := ud.db.Exec(query, user_type, user_id)
 	if err != nil {
 		return err
+	}
+
+	return nil
+}
+
+func (ud *userRepo) UpdatePassword(u *repo.UpdatePassword) error {
+	query := " UPDATE users SET password = $1 WHERE id = $2 "
+	res, err := ud.db.Exec(query, u.Password, u.UserId)
+	if err != nil {
+		return err
+	}
+	r, err := res.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if r == 0 {
+		return sql.ErrNoRows
 	}
 
 	return nil
